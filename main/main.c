@@ -1,20 +1,11 @@
-/*
- * This example code is in the Public Domain (or CC0 licensed, at your option.)
- * Unless required by applicable law or agreed to in writing, this
- * software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
- * CONDITIONS OF ANY KIND, either express or implied.
- */
-
-// This file contains a simple Hello World app which you can base you own
-// native Badge apps on.
-
+#include <esp_log.h>
 #include "main.h"
+#include "rp2040.h"
 
 static pax_buf_t buf;
 xQueueHandle buttonQueue;
 
-#include <esp_log.h>
-static const char *TAG = "mch2022-demo-app";
+static const char *TAG = "Tilde addon";
 
 // Updates the screen with the latest buffer.
 void disp_flush() {
@@ -25,6 +16,95 @@ void disp_flush() {
 void exit_to_launcher() {
     REG_WRITE(RTC_CNTL_STORE0_REG, 0);
     esp_restart();
+}
+
+void sao_demo() {
+    RP2040* rp2040 = get_rp2040();
+    
+    for (uint8_t j = 0; j < 127; j++) {
+        for (uint8_t i = 0; i < 5; i++) {
+            rp2040_set_ws2812_data(rp2040, i, j << 16);
+        }
+        rp2040_ws2812_trigger(rp2040);
+        vTaskDelay(pdMS_TO_TICKS(5));
+    }
+    for (uint8_t j = 127; j > 0; j--) {
+        for (uint8_t i = 0; i < 5; i++) {
+            rp2040_set_ws2812_data(rp2040, i, j << 16);
+        }
+        rp2040_ws2812_trigger(rp2040);
+        vTaskDelay(pdMS_TO_TICKS(5));
+    }
+    for (uint8_t j = 0; j < 127; j++) {
+        for (uint8_t i = 0; i < 5; i++) {
+            rp2040_set_ws2812_data(rp2040, i, j << 24);
+        }
+        rp2040_ws2812_trigger(rp2040);
+        vTaskDelay(pdMS_TO_TICKS(5));
+    }
+    for (uint8_t j = 127; j > 0; j--) {
+        for (uint8_t i = 0; i < 5; i++) {
+            rp2040_set_ws2812_data(rp2040, i, j << 24);
+        }
+        rp2040_ws2812_trigger(rp2040);
+        vTaskDelay(pdMS_TO_TICKS(5));
+    }
+    for (uint8_t j = 0; j < 127; j++) {
+        for (uint8_t i = 0; i < 5; i++) {
+            rp2040_set_ws2812_data(rp2040, i, j << 8);
+        }
+        rp2040_ws2812_trigger(rp2040);
+        vTaskDelay(pdMS_TO_TICKS(5));
+    }
+    for (uint8_t j = 127; j > 0; j--) {
+        for (uint8_t i = 0; i < 5; i++) {
+            rp2040_set_ws2812_data(rp2040, i, j << 8);
+        }
+        rp2040_ws2812_trigger(rp2040);
+        vTaskDelay(pdMS_TO_TICKS(5));
+    }
+    for (uint8_t i = 0; i < 5; i++) {
+        for (uint8_t j = 0; j < 127; j++) {
+            rp2040_set_ws2812_data(rp2040, i, j << 24);
+            rp2040_ws2812_trigger(rp2040);
+            vTaskDelay(pdMS_TO_TICKS(5));
+        }
+    }
+    for (uint8_t i = 0; i < 5; i++) {
+        for (uint8_t j = 127; j > 0; j--) {
+            rp2040_set_ws2812_data(rp2040, i, j << 24);
+            rp2040_ws2812_trigger(rp2040);
+            vTaskDelay(pdMS_TO_TICKS(5));
+        }
+    }
+    for (uint8_t i = 0; i < 5; i++) {
+        for (uint8_t j = 0; j < 127; j++) {
+            rp2040_set_ws2812_data(rp2040, i, j << 16);
+            rp2040_ws2812_trigger(rp2040);
+            vTaskDelay(pdMS_TO_TICKS(5));
+        }
+    }
+    for (uint8_t i = 0; i < 5; i++) {
+        for (uint8_t j = 127; j > 0; j--) {
+            rp2040_set_ws2812_data(rp2040, i, j << 16);
+            rp2040_ws2812_trigger(rp2040);
+            vTaskDelay(pdMS_TO_TICKS(5));
+        }
+    }
+    for (uint8_t i = 0; i < 5; i++) {
+        for (uint8_t j = 0; j < 127; j++) {
+            rp2040_set_ws2812_data(rp2040, i, j << 8);
+            rp2040_ws2812_trigger(rp2040);
+            vTaskDelay(pdMS_TO_TICKS(5));
+        }
+    }
+    for (uint8_t i = 0; i < 5; i++) {
+        for (uint8_t j = 127; j > 0; j--) {
+            rp2040_set_ws2812_data(rp2040, i, j << 8);
+            rp2040_ws2812_trigger(rp2040);
+            vTaskDelay(pdMS_TO_TICKS(5));
+        }
+    }
 }
 
 void app_main() {
@@ -50,6 +130,12 @@ void app_main() {
     // Initialize WiFi. This doesn't connect to Wifi yet.
     wifi_init();
     
+    // Tilde SAO init
+    RP2040* rp2040 = get_rp2040();
+    rp2040_set_gpio_dir(rp2040, 0, true); // Set SAO GPIO 1 to output
+    rp2040_set_ws2812_mode(rp2040, 1); // Set WS2812 mode to enabled, 24-bit (RGB) mode
+    rp2040_set_ws2812_length(rp2040, 5); // 5 leds
+    
     while (1) {
         // Pick a random background color.
         int hue = esp_random() & 255;
@@ -60,7 +146,7 @@ void app_main() {
         pax_background(&buf, col);
         
         // This text is shown on screen.
-        char             *text = "Hello, MCH2022!";
+        char             *text = "[~]";
         
         // Pick the font (Saira is the only one that looks nice in this size).
         const pax_font_t *font = pax_font_saira_condensed;
@@ -72,7 +158,7 @@ void app_main() {
         // Draw the centered text.
         pax_draw_text(
             &buf, // Buffer to draw to.
-            0xff000000, // color
+            0xFFFFFFFF, // color
             font, font->default_size, // Font and size to use.
             // Position (top left corner) of the app.
             (buf.width  - dims.x) / 2.0,
@@ -83,6 +169,8 @@ void app_main() {
 
         // Draws the entire graphics buffer to the screen.
         disp_flush();
+        
+        sao_demo(col);
         
         // Wait for button presses and do another cycle.
         
